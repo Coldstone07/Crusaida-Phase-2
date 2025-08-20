@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crusadia Project Pods Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral (Slate, Stone, Amber) -->
+    <!-- Application Structure Plan: A tab-based dashboard. Top navigation filters pods by major category (Wellness, Content, etc.). The main view displays pods as interactive cards. Clicking a card expands it to show detailed member and project info. This progressive disclosure approach simplifies complex information and creates an intuitive, task-oriented user flow. -->
+    <!-- Visualization & Content Choices: Report Info: Pod hierarchy -> Goal: Organize/Explore -> Viz: Interactive tabbed layout with expandable cards -> Interaction: Click to filter categories, click to expand cards -> Justification: Best method for navigating hierarchical text data without traditional charts. -> Library/Method: Vanilla JS for DOM manipulation, Tailwind CSS for layout and styling. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .tab-active {
+            border-color: #f59e0b;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .pod-card-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pod-card.is-expanded .pod-card-details {
+            max-height: 5000px;
+        }
+        .pod-card.is-expanded .expand-icon {
+            transform: rotate(45deg);
+        }
+        .sprint-phase {
+            border-left: 3px solid #e2e8f0;
+            padding-left: 1.5rem;
+            margin-left: 0.5rem;
+            position: relative;
+        }
+        .sprint-phase::before {
+            content: '';
+            position: absolute;
+            left: -0.5rem;
+            top: 0.25rem;
+            width: 0.875rem;
+            height: 0.875rem;
+            background-color: #f1f5f9;
+            border: 3px solid #e2e8f0;
+            border-radius: 9999px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .pod-card.is-expanded .sprint-phase::before {
+             border-color: #f59e0b;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900">Crusadia Project Pods</h1>
+            <p class="mt-2 text-lg text-slate-600 max-w-3xl mx-auto">The operational blueprint for Crusadia's collaborative engines. Explore the teams, their missions, and the high-value projects they're building.</p>
+        </header>
+
+        <nav id="category-tabs" class="mb-8 flex flex-wrap justify-center gap-2 md:gap-4">
+        </nav>
+
+        <main id="pods-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        </main>
+    </div>
+
+    <script>
+        const podsData = [
+            {
+                category: "Wellness & Coaching",
+                name: "Wellness Pod Alpha (Coaching & Business)",
+                mission: "To build and validate a client acquisition funnel for new wellness coaches, enabling them to secure their first high-ticket clients and establish a sustainable business model.",
+                members: [
+                    { name: "Timothy Russell", role: "Catalyst" },
+                    { name: "Jack Barry", role: "Catalyst" },
+                    { name: "Teddy Duarte", role: "Strategist" },
+                    { name: "Norm Aitbenbella", role: "Specialist" },
+                    { name: "Rafa", role: "Aspiring Founder" },
+                    { name: "Mohamed", role: "Aspiring Founder" },
+                ],
+                project: {
+                    title: '"The First Five Clients" Flywheel',
+                    problem: "The initial, paralyzing challenge of acquiring the first paying clients that stops most new coaches before they start.",
+                    asset: "A multi-format guide including a written playbook, video tutorials, and templates for organic content, DM outreach, and sales conversations.",
+                    sprint: [
+                        { phase: "Weeks 1-2 (Research)", tasks: "Interview Timothy and Jack to map their early challenges. Analyze 10 successful online coaches to deconstruct their funnels." },
+                        { phase: "Weeks 3-4 (Design)", tasks: "Create a 30-day content plan and a high-value lead magnet (e.g., a nutrition guide). Script a non-salesy DM framework for converting followers to calls." },
+                        { phase: "Weeks 5-6 (Testing)", tasks: "Timothy and Jack deploy the content strategy in their businesses. Rafa and Mohamed begin building their presence and using the DM scripts. The pod tracks all metrics weekly." },
+                        { phase: "Weeks 7-8 (Refinement)", tasks: "Analyze test results, refine the scripts and content pillars, and produce the final 'Flywheel' guide for the Codex." },
+                    ]
+                }
+            },
+            {
+                category: "Wellness & Coaching",
+                name: "Wellness Pod Bravo (Mindset & Wholistic Health)",
+                mission: "To develop a comprehensive framework for achieving mental and spiritual alignment, creating a system for personal growth that can be used by all Crusaders.",
+                members: [
+                    { name: "Joe Ayoub", role: "Catalyst" },
+                    { name: "Karim Sirsy", role: "Strategist" },
+                    { name: "Rock", role: "Specialist" },
+                    { name: "Hernan Moreno Jr", role: "Aspiring Founder" },
+                    { name: "Javed Mansoor", role: "Aspiring Founder" },
+                    { name: "Bryan Baez", role: "Aspiring Founder" },
+                    { name: "Prem Vaibhav Jain", role: "Community Member" },
+                ],
+                project: {
+                    title: '"The Mindset Navigator" System',
+                    problem: "The lack of a structured, holistic approach to mental and spiritual well-being that goes beyond surface-level motivation.",
+                    asset: '"The Mindset Navigator": A digital course or guided journal including modules on meditation, value identification, goal setting, and resilience-building exercises.',
+                    sprint: [
+                        { phase: "Weeks 1-2 (Research)", tasks: "Research established mindset frameworks (e.g., Stoicism, CBT). Interview Joe and Karim to define the core pillars of the Crusadia mindset." },
+                        { phase: "Weeks 3-4 (Design)", tasks: "Outline the modules of the system. Develop the core exercises and written content for each module." },
+                        { phase: "Weeks 5-6 (Testing)", tasks: "All pod members personally go through the entire system, documenting their experiences and providing feedback." },
+                        { phase: "Weeks 7-8 (Refinement)", tasks: "Refine the content and exercises based on the testing phase. Record audio/video guides and package the final system for the Codex." },
+                    ]
+                }
+            },
+            {
+                category: "Wellness & Coaching",
+                name: "Wellness Pod Charlie (Fitness & Content)",
+                mission: "To create a highly engaging, results-driven fitness program and document the entire process as a powerful content series.",
+                members: [
+                    { name: "jannik hofmann", role: "Catalyst" },
+                    { name: "Paril Bhakta", role: "Strategist" },
+                    { name: "Dawood Hussaini", role: "Specialist" },
+                    { name: "Jo Romero", role: "Aspiring Founder" },
+                    { name: "Felipe Pena", role: "Aspiring Founder" },
+                    { name: "Zach", role: "Aspiring Founder" },
+                    { name: "Max Kardassis", role: "Community Member" },
+                ],
+                project: {
+                    title: 'The "Crusader Physique" Program & Case Study',
+                    problem: "The market is saturated with generic fitness programs. This project will create a program *by* Crusaders, *for* Crusaders, and prove its effectiveness.",
+                    asset: "A complete 12-week fitness program with video tutorials for every exercise, a nutrition guide, and a companion documentary-style video series showcasing the pod members' transformations.",
+                    sprint: [
+                        { phase: "Weeks 1-2 (Design)", tasks: "jannik and Paril design the 12-week training and nutrition protocol. The pod defines the content strategy for documenting the journey." },
+                        { phase: "Weeks 3-4 (Execution & Filming)", tasks: "The entire pod begins the program. They meticulously film their workouts, meals, and weekly check-ins." },
+                        { phase: "Weeks 5-6 (Mid-Point Analysis & Editing)", tasks: "The pod analyzes their progress at the halfway mark and makes any necessary adjustments. The content specialists begin editing the first batch of videos." },
+                        { phase: "Weeks 7-8 (Finalization & Launch)", tasks: "The pod completes the program and films their final results. They finalize the complete program guide and the video series for a coordinated launch in the Codex." },
+                    ]
+                }
+            },
+            {
+                category: "Content & Branding",
+                name: "Content Pod Alpha (Visual Arts & Branding)",
+                mission: "To build a complete brand identity and launch a high-production value video series for a Crusader's business, creating a case study on powerful visual branding.",
+                members: [
+                    { name: "Scott Hess", role: "Catalyst" },
+                    { name: "Sam Tartaglia", role: "Strategist" },
+                    { name: "Akshat Mittal", role: "Specialist" },
+                    { name: "Marino Saric", role: "Specialist" },
+                    { name: "Lucas Crystal", role: "Specialist" },
+                    { name: "Owen Paulson", role: "Aspiring Founder" },
+                ],
+                project: {
+                    title: 'The "Brand Forged" Case Study',
+                    problem: "Many businesses have a great product but fail due to weak branding and uninspired content. This pod will fix that.",
+                    asset: "A complete branding package (logo, color palette, style guide) for Scott's business, a 3-part high-production video series, and a behind-the-scenes case study on the entire creative process.",
+                    sprint: [
+                        { phase: "Weeks 1-2 (Discovery & Strategy)", tasks: "Deep dive into Scott's brand. Marino and Lucas lead the development of the brand's visual identity. Sam and Akshat storyboard the video series." },
+                        { phase: "Weeks 3-4 (Production)", tasks: "The pod collaborates to produce the visual assets and film the core content for the video series." },
+                        { phase: "Weeks 5-6 (Post-Production)", tasks: "Akshat and Owen lead the editing of the video series, incorporating graphics and sound design." },
+                        { phase: "Weeks 7-8 (Launch & Documentation)", tasks: "Launch the new branding and video series. The pod creates the final case study for the Codex, detailing their process from start to finish." },
+                    ]
+                }
+            },
+            {
+                category: "Content & Branding",
+                name: "Content Pod Bravo (Performance & Marketing)",
+                mission: "To launch a new podcast or music project, grow its initial audience to 1,000 listeners/followers, and create a monetization strategy.",
+                members: [
+                    { name: "Andres Trujillo", role: "Strategist" },
+                    { name: "Jun Sim", role: "Specialist" },
+                    { name: "Will Echols", role: "Specialist" },
+                    { name: "Rishy Pirabakaran", role: "Aspiring Founder" },
+                    { name: "Marco Bargilli", role: "Aspiring Founder" },
+                    { name: "Joseph Robert Malone", role: "Aspiring Founder" },
+                    { name: "Daniel Demant", role: "Aspiring Founder" },
+                ],
+                project: {
+                    title: 'The "Signal Boost" Blueprint',
+                    problem: "Many talented artists and creators fail to gain traction due to a lack of marketing and distribution strategy.",
+                    asset: '"The 1k Follower Blueprint": A step-by-step guide for launching an audio-based project. It will include a content strategy, a social media growth plan, a guide to distribution, and three proven monetization models.',
+                    sprint: [
+                        { phase: "Weeks 1-2 (Concept & Branding)", tasks: "Define the concept, name, and branding for the podcast/music project. Record the first three episodes or tracks." },
+                        { phase: "Weeks 3-4 (Launch & Initial Push)", tasks: "Launch the project on all major platforms. Execute a coordinated launch promotion within the Crusadia network and on social media." },
+                        { phase: "Weeks 5-6 (Growth Hacking)", tasks: "Implement strategies to grow the audience, such as collaborations, social media clips, and community engagement." },
+                        { phase: "Weeks 7-8 (Monetization & Documentation)", tasks: "Implement one monetization strategy (e.g., affiliate links, a low-ticket product). Document the entire process into the 'Signal Boost' blueprint for the Codex." },
+                    ]
+                }
+            },
+            {
+                category: "Business & Investment",
+                name: "Real Estate & Wealth Building Pod",
+                mission: "To create an institutional-grade toolkit for analyzing residential real estate deals and to collectively analyze one live deal from start to finish.",
+                members: [
+                    { name: "Riley Brown", role: "Catalyst" },
+                    { name: "Kurt Gonzalez", role: "Catalyst" },
+                    { name: "Armin Cerić", role: "Catalyst" },
+                    { name: "Gurinder Khaira", role: "Strategist" },
+                    { name: "Vaarana", role: "Aspiring Founder" },
+                    { name: "Dakota Bailey", role: "Aspiring Founder" },
+                    { name: "Braedon Leblanc", role: "Aspiring Founder" },
+                ],
+                project: {
+                    title: 'The "Deal Analyzer & Due Diligence" Toolkit',
+                    problem: "The analysis paralysis and fear of making a catastrophic financial mistake that prevents most aspiring investors from ever buying their first property.",
+                    asset: '"The Crusader Real Estate Toolkit": A downloadable package featuring an interactive Deal Analyzer spreadsheet, a multi-point Due Diligence Checklist, and video guides.',
+                    sprint: [
+                        { phase: "Weeks 1-2 (Research)", tasks: "Define the most critical financial metrics for deal analysis (Cap Rate, CoC Return, etc.). Interview the Catalysts to compile a list of common mistakes." },
+                        { phase: "Weeks 3-4 (Design)", tasks: 'Build the "Deal Analyzer v1.0" spreadsheet. Draft the comprehensive Due Diligence Checklist.' },
+                        { phase: "Weeks 5-6 (Testing)", tasks: "Riley uses the toolkit to analyze a live deal. Vaarana, Dakota, and Braedon use it to simulate analyzing three online listings. The pod gathers feedback." },
+                        { phase: "Weeks 7-8 (Refinement)", tasks: "Revise the tools based on feedback. Record video tutorials and package the final toolkit for the Codex." },
+                    ]
+                }
+            },
+            {
+                category: "Business & Investment",
+                name: "Financial Trading & Systems Pod",
+                mission: "To develop, backtest, and document a disciplined, rule-based trading strategy that removes emotion and empowers Crusaders to approach financial markets with a systematic edge.",
+                members: [
+                    { name: "Nick Pastori", role: "Catalyst" },
+                    { name: "Awan Ali", role: "Strategist" },
+                    { name: "Uzzaam Asim", role: "Specialist" },
+                    { name: "Ali", role: "Specialist" },
+                    { name: "Morgan Gawan-Taylor", role: "Aspiring Founder" },
+                    { name: "Oliver Rook", role: "Aspiring Founder" },
+                ],
+                project: {
+                    title: "The Rule-Based Trader's Playbook",
+                    problem: "The lack of a disciplined, repeatable system, which is the primary cause of failure for 90% of retail traders.",
+                    asset: '"The Trend-Following Equities Playbook": A highly detailed document outlining a complete trend-following strategy for US stocks, with rules, risk management, and backtesting results.',
+                    sprint: [
+                        { phase: "Weeks 1-2 (Research)", tasks: "Define the strategy's core principles and select the market/timeframe. Define the specific rules for identifying trade setups." },
+                        { phase: "Weeks 3-4 (Backtesting)", tasks: "The specialists lead the backtesting of the strategy against at least 5 years of historical data, calculating key performance metrics." },
+                        { phase: "Weeks 5-6 (Forward-Testing)", tasks: 'The pod "paper trades" the strategy in the live market for two weeks to test its real-world efficacy.' },
+                        { phase: "Weeks 7-8 (Documentation)", tasks: 'Document the entire strategy in exhaustive detail and create the final "Playbook" asset for the Codex.' },
+                    ]
+                }
+            },
+            {
+                category: "Business & Investment",
+                name: "E-commerce & Sales Pod",
+                mission: "To build a complete marketing and sales funnel for an e-commerce product and increase its monthly revenue by 25%.",
+                members: [
+                    { name: "Zack Fowler", role: "Catalyst" },
+                    { name: "Alex Bjorkman", role: "Strategist" },
+                    { name: "Gino Binoy", role: "Specialist" },
+                    { name: "Shane Hebert", role: "Specialist" },
+                    { name: "Kal Leonard", role: "Aspiring Founder" },
+                    { name: "Aditya Pawar", role: "Aspiring Founder" },
+                ],
+                project: {
+                    title: 'The "E-com Growth Engine"',
+                    problem: "Many e-commerce stores struggle with consistent growth due to a lack of a systematic marketing and sales funnel.",
+                    asset: "A case study and blueprint detailing the process of building a sales funnel that resulted in a measurable revenue increase.",
+                    sprint: [
+                        { phase: "Weeks 1-2 (Audit & Strategy)", tasks: "The pod conducts a full audit of an existing e-commerce business. They design a new marketing and sales funnel." },
+                        { phase: "Weeks 3-4 (Build)", tasks: "The specialists build out the assets for the funnel: ad creatives, copy, landing pages, and email sequences." },
+                        { phase: "Weeks 5-6 (Launch & Optimize)", tasks: "The pod launches the new funnel and closely monitors the data, optimizing for conversion at each step." },
+                        { phase: "Weeks 7-8 (Analyze & Document)", tasks: "The pod analyzes the final results against their initial goals and documents the entire process into a detailed case study for the Codex." },
+                    ]
+                }
+            },
+            {
+                category: "Technology & Ventures",
+                name: "SaaS & Technical Development Pod",
+                mission: "To rapidly ideate, validate, and build a functional Minimum Viable Product (MVP) for a micro-SaaS solution that solves a tangible problem for a niche business audience.",
+                members: [
+                    { name: "Wassim Dakka", role: "Catalyst" },
+                    { name: "Jose", role: "Strategist" },
+                    { name: "Jose Ceballos", role: "Specialist" },
+                    { name: "Pranay Chakravarty", role: "Specialist" },
+                    { name: "Kenneth", role: "Aspiring Founder" },
+                    { name: "Sriram Ranganathan", role: "Community Member" },
+                ],
+                project: {
+                    title: "The Micro-SaaS Sprint: Idea to MVP",
+                    problem: "The immense technical and strategic barrier to entry that prevents entrepreneurs from building and launching their first software product.",
+                    asset: '"The MVP Launch Kit": A playbook that includes a "Problem Validation" survey template, a guide to prioritizing features, a technical roadmap, and a beta-tester outreach script.',
+                    sprint: [
+                        { phase: "Weeks 1-2 (Validation)", tasks: "Interview 10 potential customers from Wassim's network to validate a specific pain point. Draft a one-page 'Solution Spec' and confirm interest." },
+                        { phase: "Weeks 3-4 (Prototyping)", tasks: "Create low-fidelity wireframes of the core user flow. Ruthlessly prioritize features for the MVP." },
+                        { phase: "Weeks 5-6 (Build Sprint)", tasks: "The specialists lead a focused two-week sprint to build the functional MVP." },
+                        { phase: "Weeks 7-8 (User Testing & Documentation)", tasks: 'Onboard beta testers and gather feedback. Document the entire process into the "MVP Launch Kit" for the Codex.' },
+                    ]
+                }
+            },
+            {
+                category: "Technology & Ventures",
+                name: 'Venture & Strategy Pod (The "Pathfinders")',
+                mission: "To explore and develop a complete business plan for a new, innovative venture, taking it from a raw idea to an investor-ready proposal.",
+                members: [
+                    { name: "Calum Maclean", role: "Catalyst" },
+                    { name: "Hirdesh", role: "Strategist" },
+                    { name: "Ramey", role: "Specialist" },
+                    { name: "Mustafa Sami", role: "Specialist" },
+                    { name: "John Parker", role: "Aspiring Founder" },
+                    { name: "Barbod Pournajar", role: "Aspiring Founder" },
+                ],
+                project: {
+                    title: 'The "Venture Blueprint"',
+                    problem: "Many great business ideas fail to launch due to a lack of a clear, comprehensive, and well-researched business plan.",
+                    asset: "A complete, investor-ready business plan for a new venture, including market analysis, financial projections, and an operational plan.",
+                    sprint: [
+                        { phase: "Weeks 1-2 (Ideation & Market Research)", tasks: "The pod brainstorms and selects one venture idea to pursue. They conduct extensive market research to validate the opportunity." },
+                        { phase: "Weeks 3-4 (Strategy & Financials)", tasks: "Develop the core business strategy, including the offer, pricing, and marketing plan. Build a 3-year financial projection model." },
+                        { phase: "Weeks 5-6 (Operations & Pitch Deck)", tasks: "Outline the operational plan for the business. Create a compelling 10-slide investor pitch deck." },
+                        { phase: "Weeks 7-8 (Finalization & Presentation)", tasks: "Finalize the complete business plan document. The pod presents their venture to a panel of experienced Crusader business owners for feedback." },
+                    ]
+                }
+            },
+             {
+                category: "AI & Future Tech",
+                name: "The Human Connection & AI Pod",
+                mission: "To research, design, and prototype a technology platform that uses AI to foster genuine self-awareness and deep human connection, combating the crisis of modern loneliness.",
+                members: [
+                    { name: "Jatin A", role: "Catalyst & Visionary" },
+                    { name: "Michael Ammaturo", role: "Strategist & Researcher" },
+                    { name: "SKRIBBLES", role: "Specialist & Systems Architect" },
+                ],
+                project: {
+                    title: '"The Inner Compass - Phase 1"',
+                    problem: "The modern crisis of loneliness and disconnection, which current social technology often exacerbates rather than solves.",
+                    asset: '"A Blueprint for Human-Centric AI": A foundational whitepaper detailing the pod\'s research, a functional prototype of an AI-powered journaling tool, and a technical/philosophical framework for an "enlightened LLM."',
+                    sprint: [
+                        { phase: "Weeks 1-2 (Research & Framework)", tasks: "Jatin and Michael synthesize research on loneliness, connection, and consciousness. They define the core ethical and functional principles for their 'enlightened LLM.'" },
+                        { phase: "Weeks 3-4 (System Design)", tasks: "SKRIBBLES maps out the technical architecture for a prototype. The pod designs the user experience for an AI journaling tool that serves as a 'mirror for self-awareness.'" },
+                        { phase: "Weeks 5-6 (Prototype Build)", tasks: "The pod builds a functional prototype of the journaling tool, focusing on the AI-driven insight generation and its potential to act as a 'bridge to deeper connection.'" },
+                        { phase: "Weeks 7-8 (Testing & Whitepaper)", tasks: "The pod tests the prototype with a small group of Crusaders. They write and publish their 'Blueprint for Human-Centric AI' to the Codex." },
+                    ]
+                }
+            },
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabsContainer = document.getElementById('category-tabs');
+            const podsContainer = document.getElementById('pods-container');
+
+            const categories = ['All Pods', ...new Set(podsData.map(pod => pod.category))];
+
+            categories.forEach(category => {
+                const tab = document.createElement('button');
+                tab.textContent = category;
+                tab.dataset.category = category;
+                tab.className = 'px-4 py-2 text-sm md:text-base border-b-2 border-transparent text-slate-500 hover:text-amber-600 transition-colors duration-300';
+                if (category === 'All Pods') {
+                    tab.classList.add('tab-active');
+                }
+                tabsContainer.appendChild(tab);
+            });
+
+            const renderPods = (filter = 'All Pods') => {
+                podsContainer.innerHTML = '';
+                const filteredPods = filter === 'All Pods' ? podsData : podsData.filter(pod => pod.category === filter);
+
+                filteredPods.forEach(pod => {
+                    const card = document.createElement('div');
+                    card.className = 'pod-card bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col cursor-pointer';
+                    card.dataset.category = pod.category;
+
+                    let membersHtml = pod.members.map(member => `
+                        <div class="flex items-center">
+                            <span class="font-semibold text-slate-700">${member.name}</span>
+                            <span class="ml-auto text-xs font-medium bg-amber-100 text-amber-800 px-2 py-1 rounded-full">${member.role}</span>
+                        </div>
+                    `).join('');
+
+                    let sprintHtml = pod.project.sprint.map(phase => `
+                        <div class="sprint-phase pb-6">
+                           <h5 class="font-semibold text-slate-700">${phase.phase}</h5>
+                           <p class="text-slate-600 text-sm">${phase.tasks}</p>
+                        </div>
+                    `).join('');
+
+
+                    card.innerHTML = `
+                        <div class="p-6">
+                            <div class="flex justify-between items-start">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-amber-600">${pod.category}</span>
+                                <div class="expand-icon text-slate-400 text-3xl font-light transition-transform duration-300">+</div>
+                            </div>
+                            <h2 class="text-xl font-bold text-slate-900 mt-2">${pod.name}</h2>
+                            <p class="text-slate-600 mt-2 text-sm">${pod.mission}</p>
+                        </div>
+                        <div class="pod-card-details">
+                            <div class="px-6 pb-6 border-t border-slate-100 pt-4">
+                                <h4 class="font-semibold text-slate-800 mb-3">Pod Members</h4>
+                                <div class="space-y-2 text-sm">${membersHtml}</div>
+                            </div>
+                            <div class="bg-slate-50 px-6 py-6 rounded-b-xl">
+                                <h4 class="font-semibold text-slate-800 mb-1">Primary Project: ${pod.project.title}</h4>
+                                <p class="text-sm text-slate-600 mb-2"><span class="font-medium text-slate-700">Problem Solved:</span> ${pod.project.problem}</p>
+                                <p class="text-sm text-slate-600 mb-4"><span class="font-medium text-slate-700">Final Codex Asset:</span> ${pod.project.asset}</p>
+                                <h4 class="font-semibold text-slate-800 mb-4">8-Week Sprint Breakdown</h4>
+                                <div class="relative">${sprintHtml}</div>
+                            </div>
+                        </div>
+                    `;
+                    podsContainer.appendChild(card);
+                });
+            };
+
+            tabsContainer.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    document.querySelector('.tab-active').classList.remove('tab-active');
+                    e.target.classList.add('tab-active');
+                    renderPods(e.target.dataset.category);
+                }
+            });
+
+            podsContainer.addEventListener('click', (e) => {
+                const card = e.target.closest('.pod-card');
+                if (card) {
+                    card.classList.toggle('is-expanded');
+                }
+            });
+
+            renderPods();
+        });
+    </script>
+</body>
+</html>
